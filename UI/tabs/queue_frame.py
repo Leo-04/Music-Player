@@ -88,6 +88,7 @@ class QueueFrame(LabelFrame):
             self.winfo_toplevel().event_generate("<<Queue-Artist>>", when="tail", y=event.y)
         elif column == 5:
             self.songs.values.pop(index)
+            self.tracks.pop(index)
 
             if self.songs.selected == index:
                 self.songs.un_select()
