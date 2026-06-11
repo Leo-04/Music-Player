@@ -161,10 +161,10 @@ class App(Tk):
         # Create UI
         menu = TkMenu(
             self,
-            dict(text="Open Files", hotkey="<Control-Key-o>", command=self.add_files),
+            dict(text="Add Files To Queue", hotkey="<Control-Key-o>", command=self.add_files),
             dict(text="EQ Presets", hotkey="<Control-e>", command=lambda: self.player.set_eq(*self.eq_window.get())),
-            dict(text="About", hotkey="<Control-h>", command=lambda: showinfo("About", ABOUT, height=420, width=400)),
             dict(text="Restart Indexer", hotkey="<Control-i>", command=self.indexer.update_index_thread, side=RIGHT, name="indexer_button"),
+            dict(text="About", hotkey="<Control-h>", command=lambda: showinfo("About", ABOUT, height=420, width=400), side=RIGHT),
         )
         self.indexer_button = menu.nametowidget("indexer_button")
 
@@ -261,7 +261,7 @@ class App(Tk):
         for track in tracks:
             self.played.add(str(track.filename), "File")
 
-        self.play_tracks(0, tracks)
+        self.play_tracks(None, tracks)
 
     def get_tracks_in_album(self, album: str) -> list[TrackData]:
         """Gets all the tracks in the given album"""

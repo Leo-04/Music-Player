@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 import re
 from mutagen import File
@@ -15,8 +16,9 @@ class TrackData:
     folder: Path
     filename: Path
     length: int
+    date: str
 
-    def __init__(self, track_number: int, title: str, album: str, artist: str, folder: Path, filename: Path, length: int):
+    def __init__(self, track_number: int, title: str, album: str, artist: str, folder: Path, filename: Path, length: int, date: str):
         self.number = track_number
         self.title = title
         self.album = album
@@ -24,6 +26,7 @@ class TrackData:
         self.folder = folder
         self.filename = filename
         self.length = length
+        self.date = date
 
     def get_len(self) -> str:
         """Gets the length as a formatted string"""
@@ -68,6 +71,7 @@ def get_track_data_from_filename(file_path: Path | str, index: int = 1) -> Track
     artist = "\u2047\uFF1F Unknown Artist \uFF1F\u2047"
     folder = file_path.parent.absolute()
     file_path = file_path.absolute()
+    date = ""  # str(datetime.now().year)
 
     try:
         file = File(file_path, easy=True)
@@ -93,6 +97,11 @@ def get_track_data_from_filename(file_path: Path | str, index: int = 1) -> Track
             title = ",".join(str(s) for s in file[tag]).title()
             break
 
+    for tag in ["date", "Date", "year", "Year"]:
+        if tag in file:
+            date = file[tag][0]
+            break
+
     for tag in ["tracknumber", "track", "number", "Tracknumber", "TrackNumber", "Track", "Number", "trck"]:
         if tag in file:
             number = re.search(r'\d+', file[tag][0])
@@ -102,4 +111,4 @@ def get_track_data_from_filename(file_path: Path | str, index: int = 1) -> Track
 
     length = file.info.length
 
-    return TrackData(track_number, title, album, artist, folder, file_path, length)
+    return TrackData(track_number, title, album, artist, folder, file_path, length, date)

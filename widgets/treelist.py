@@ -167,12 +167,14 @@ class TreeItem(Button):
 
         self.items.pop(index)
         self.update_text()
+        self.master.update_items()
 
     def remove(self, widget: "TreeItem"):
         """Removes a sub-item by value"""
 
         self.items.remove(widget)
         self.update_text()
+        self.master.update_items()
 
     def get_height(self):
         """Gets the wanted height for this item"""

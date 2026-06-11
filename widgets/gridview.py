@@ -133,7 +133,7 @@ class GridView(Frame):
 
         self.update_rows()
 
-    def sort(self, key: callable = None):
+    def sort(self, key: callable = None, reverse: bool = False):
         """
         Sorts the widgets
         If key is given, use that to sort widgets going forwards
@@ -141,12 +141,15 @@ class GridView(Frame):
         Parameters:
             key: callable[any] -> int | None
                 The key given to sort the widgets
+
+            reverse: bool
+                Weather to reverse the items
         """
 
         if key is not None:
             self.sort_key = key
 
-        self.values.sort(key=self.sort_key)
+        self.values.sort(key=self.sort_key, reverse=reverse)
 
     def on_resize(self):
         """Callback for resized event"""
@@ -210,7 +213,7 @@ class GridView(Frame):
             self.current_row = int(value * (self.max_rows - 1))
 
         elif cmd == "scroll":
-            value = value = int(float(value))
+            value = int(float(value))
             self.current_row = max(min(self.current_row + value, self.max_rows - 1), 0)
         else:
             print(cmd, value, other)
