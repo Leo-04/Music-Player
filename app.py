@@ -879,15 +879,15 @@ class App(Tk):
             self.player.pause()
             self.player_frame.actions.set_play(False)
 
-        def queue_album_selected(_: Event):
-            self.albums.show_songs(self.queue.get_track().album)
+        def queue_album_selected(event: Event):
+            self.albums.show_songs(self.queue.get_tracks()[event.y].album)
             self.tabs.select(3)
 
-        def queue_artist_selected(_: Event):
-            self.artists.show_albums(self.queue.get_track().artist)
+        def queue_artist_selected(event: Event):
+            self.artists.show_albums(self.queue.get_tracks()[event.y].artist)
             self.tabs.select(4)
 
-        self.bind("<<Queue-Info>>", lambda e: (self.info_window.set_track(self.queue.tracks[e.y])))
+        self.bind("<<Queue-Info>>", lambda e: (self.info_window.set_track(self.queue.get_tracks()[e.y])))
         self.bind("<<Queue-Load>>", load_the_queue)
         self.bind("<<Queue-LoadNoPlay>>", load_the_queue_but_dont_play)
         self.bind("<<Queue-Album>>", queue_album_selected)

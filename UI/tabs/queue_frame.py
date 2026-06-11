@@ -60,11 +60,19 @@ class QueueFrame(LabelFrame):
         from_ = event.y
         to = event.serial
 
-        self.songs.values.insert(to, self.songs.values.pop(from_))
+        track = self.songs.selected
+        tracks = list(range(0, len(self.tracks)))
+        tracks.insert(to, tracks.pop(from_))
 
-        if self.songs.selected == from_:
-            self.songs.un_select()
-            self.songs.select(to)
+        self.tracks = [self.tracks[index] for index in tracks]
+
+        self.songs.clear()
+
+        for index, song in enumerate(self.tracks):
+            self.songs.add([GRIP, song.title, song.album, song.artist, song.get_len(), CROSS, index])
+
+        if track is not None:
+            self.songs.select(tracks.index(track))
 
         self.songs.update_all()
 
@@ -75,9 +83,9 @@ class QueueFrame(LabelFrame):
         column = event.x
 
         if column == 2:
-            self.winfo_toplevel().event_generate("<<Queue-Album>>", when="tail")
+            self.winfo_toplevel().event_generate("<<Queue-Album>>", when="tail", y=event.y)
         elif column == 3:
-            self.winfo_toplevel().event_generate("<<Queue-Artist>>", when="tail")
+            self.winfo_toplevel().event_generate("<<Queue-Artist>>", when="tail", y=event.y)
         elif column == 5:
             self.songs.values.pop(index)
 
@@ -128,11 +136,11 @@ class QueueFrame(LabelFrame):
         self.songs.clear()
         self.tracks.extend(tracks)
 
-        for song in self.tracks:
+        for index, song in enumerate(self.tracks):
             if song is None:
-                self.songs.add([GRIP, "ERROR", "ERROR", "ERROR", "--:--:--", CROSS, song])
+                self.songs.add([GRIP, "ERROR", "ERROR", "ERROR", "--:--:--", CROSS, index])
             else:
-                self.songs.add([GRIP, song.title, song.album, song.artist, song.get_len(), CROSS, song])
+                self.songs.add([GRIP, song.title, song.album, song.artist, song.get_len(), CROSS, index])
 
         self.songs.update_all()
 
@@ -162,6 +170,9 @@ class QueueFrame(LabelFrame):
             delta = 0
         next_pos = self.songs.selected + delta
 
+        while next_pos < 0:
+            next_pos += len(self.songs)
+
         if next_pos >= len(self.songs):
             if self.loop_type == QueueFrame.LoopType.STOP_AT_END:
                 play = False
@@ -184,27 +195,34 @@ class QueueFrame(LabelFrame):
 
         values = self.songs.get(self.songs.selected)
         if values is not None:
-            return values[-1]  # last element is track data
+            return self.tracks[values[-1]]  # last element is track data index
+
+    def get_tracks(self):
+        """Returns the current order of the list of tracks"""
+
+        return [
+            self.tracks[values[-1]]  # last element is track data index
+            for values in self.songs.values
+        ]
 
     def shuffle(self, do_shuffle: bool):
         """Shuffles or un-shuffles the queue"""
 
-        track = self.get_track()
-        if track is None:
-            return
+        track = self.songs.selected
+        tracks = range(0, len(self.tracks))
 
-        playing_track = track.filename
+        if do_shuffle:
+            tracks = random.sample(tracks, len(self.tracks))
+        elif track is not None:
+            track = self.songs.get(self.songs.selected)[-1]
 
         self.songs.clear()
 
-        if do_shuffle:
-            tracks = random.sample(self.tracks, len(self.tracks))
-        else:
-            tracks = self.tracks
+        for index in tracks:
+            song = self.tracks[index]
+            self.songs.add([GRIP, song.title, song.album, song.artist, song.get_len(), CROSS, index])
 
-        for song in tracks:
-            self.songs.add([GRIP, song.title, song.album, song.artist, song.get_len(), CROSS, song])
-
-        self.songs.select([track.filename for track in tracks].index(playing_track))
+        if track is not None:
+            self.songs.select(tracks.index(track))
 
         self.songs.update_all()
