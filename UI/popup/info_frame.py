@@ -19,6 +19,7 @@ class InfoWindow(DialogWindow):
     art: Label
     title: Label
     album: Button
+    date: Label
     number: Label
     artist: Button
     length: Label
@@ -40,7 +41,12 @@ class InfoWindow(DialogWindow):
         frame = LabelFrame(self, text="Title")
         self.title = Label(frame, text="Track Title")
         self.title.pack(fill=BOTH, expand=1, padx=10, pady=10)
-        frame.grid(row=0, column=1, columnspan=2, sticky=NSEW, padx=10, pady=5)
+        frame.grid(row=0, column=1, sticky=NSEW, padx=10, pady=5)
+
+        frame = LabelFrame(self, text="Track Number")
+        self.number = Label(frame, text="Track #")
+        self.number.pack(fill=BOTH, expand=1, padx=10, pady=10)
+        frame.grid(row=0, column=2, sticky=NSEW, padx=10, pady=5)
 
         frame = LabelFrame(self, text="Album")
         self.album = Button(frame, text="Track Album",
@@ -48,9 +54,9 @@ class InfoWindow(DialogWindow):
         self.album.pack(fill=BOTH, expand=1, padx=10, pady=10)
         frame.grid(row=1, column=1, sticky=NSEW, padx=10, pady=5)
 
-        frame = LabelFrame(self, text="Track Number")
-        self.number = Label(frame, text="Track #")
-        self.number.pack(fill=BOTH, expand=1, padx=10, pady=10)
+        frame = LabelFrame(self, text="Length", width=150)
+        self.length = Label(frame, text="00:00:00", width=8)
+        self.length.pack(fill=BOTH, expand=1, padx=10, pady=10)
         frame.grid(row=1, column=2, sticky=NSEW, padx=10, pady=5)
 
         frame = LabelFrame(self, text="Artist")
@@ -59,9 +65,9 @@ class InfoWindow(DialogWindow):
         self.artist.pack(fill=BOTH, expand=1, padx=10, pady=10)
         frame.grid(row=2, column=1, sticky=NSEW, padx=10, pady=5)
 
-        frame = LabelFrame(self, text="Length", width=150)
-        self.length = Label(frame, text="00:00:00", width=8)
-        self.length.pack(fill=BOTH, expand=1, padx=10, pady=10)
+        frame = LabelFrame(self, text="Track Date")
+        self.date = Label(frame, text="Date")
+        self.date.pack(fill=BOTH, expand=1, padx=10, pady=10)
         frame.grid(row=2, column=2, sticky=NSEW, padx=10, pady=5)
 
         frame = LabelFrame(self, text="File Location")
@@ -96,11 +102,11 @@ class InfoWindow(DialogWindow):
         if not self.track:
             return
 
-        folder = self.track.folder
+        folder = str(self.track.folder)
 
         plat = platform.system()
         if plat == "Windows":
-            cmd = ['explorer', folder]
+            cmd = ['explorer', folder.replace("/", "\\")]
         elif plat == "Linux":
             cmd = ['xdg-open', folder]
         elif plat == "Darwin":
@@ -146,6 +152,7 @@ class InfoWindow(DialogWindow):
         self.artist["text"] = self.track.artist
         self.number["text"] = str(self.track.number)
         self.length["text"] = self.track.get_len()
+        self.date["text"] = str(self.track.date)
         self.file_loc["text"] = str(self.track.filename)
 
         self.position()

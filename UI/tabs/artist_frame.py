@@ -69,6 +69,7 @@ class ArtistsFrame(LabelFrame):
         self.albums = GridView(
             self, item_width=300, item_height=350, item_padx=20, item_pady=20
         )
+        self.sort_key = lambda v: self.indexer.albums[v["text"]].date
         self.albums_scroll_bar = ttk.Scrollbar(self, command=self.albums.yview)
         self.albums.yscrollcommand = self.albums_scroll_bar.set
         self.albums.sort_key = lambda button: button.data.album
@@ -196,6 +197,8 @@ class ArtistsFrame(LabelFrame):
         for button in [b for b in self.buttons if b["text"] in albums]:
             self.albums.add(button)
 
+        self.albums.sort(self.sort_key, reverse=True)
+        print([self.sort_key(value) for value in self.albums.values])
         self.albums.update_rows()
 
     def show_songs(self, album):
@@ -280,6 +283,7 @@ class ArtistsFrame(LabelFrame):
         for button in [b for b in self.buttons if b["text"] in albums and search in b["text"].lower()]:
             self.albums.add(button)
 
+        self.albums.sort(self.sort_key, reverse=True)
         self.albums.update_rows()
 
     def update_list(self):
