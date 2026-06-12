@@ -159,6 +159,6 @@ def media_key_thread(*args):
     """
 
     if os.name == "nt":
-        return media_keys_thread_windows(*args)
+        media_keys_thread_windows(*args)
     else:
-        return media_keys_thread_linux(*args)
+        media_keys_thread_linux(*args)

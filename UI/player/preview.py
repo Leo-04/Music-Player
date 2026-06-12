@@ -12,7 +12,9 @@ class Preview(Frame):
     artist: Button
     album: Button
     image: PhotoImage
+    blank: PhotoImage
     image_widget: Label
+    image_file: str | None
 
     def __init__(self, master=None):
         Frame.__init__(self, master)
@@ -25,7 +27,7 @@ class Preview(Frame):
                             command=lambda: self.winfo_toplevel().event_generate("<<Action-Album>>", when="tail"))
 
         self.image_file = None
-        self.image = PhotoImage(width=75, height=75)
+        self.image = self.blank = PhotoImage(width=75, height=75)
         self.image_widget = Label(self, image=self.image, bd=1, relief="ridge")
 
         self.image_widget.grid(row=0, column=0, rowspan=2, sticky=NSEW)
@@ -38,7 +40,7 @@ class Preview(Frame):
         self.columnconfigure(1, weight=1)
         self.columnconfigure(2, weight=1)
 
-    def set_image(self, music_file: str):
+    def set_image(self, music_file: str | None):
         """
         Sets the preview image from a music file
 
@@ -47,7 +49,11 @@ class Preview(Frame):
                 A path to the music file to get the image from
         """
 
-        if self.image_file != music_file:
+        if music_file is None:
+            self.image = self.blank
+            self.image_widget["image"] = self.image
+
+        elif self.image_file != music_file:
             self.image_file = music_file
             self.image = music.image.get(self.image_file, (75, 75))
             self.image_widget["image"] = self.image

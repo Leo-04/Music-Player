@@ -33,7 +33,7 @@ class QueueFrame(LabelFrame):
             self, columns=(" ", "Title", "Album", "Artist", "Length", " "),
             auto_expand=(1, 2, 3),
             sashrelief="raised", sashwidth=5, title_relief="raised", title_padx=10, title_pady=5,
-            widths=[None, 100, 50, 50], show_drag=[0]
+            widths=[25, 150, 100, 100, 100, 25], show_drag=[0]
         )
         scroll_bar = ttk.Scrollbar(self, command=self.songs.yview)
         self.songs.yscrollcommand = scroll_bar.set
@@ -66,15 +66,10 @@ class QueueFrame(LabelFrame):
 
         self.tracks = [self.tracks[index] for index in tracks]
 
-        self.songs.clear()
-
-        for index, song in enumerate(self.tracks):
-            self.songs.add([GRIP, song.title, song.album, song.artist, song.get_len(), CROSS, index])
+        self.update_songs_list()
 
         if track is not None:
             self.songs.select(tracks.index(track))
-
-        self.songs.update_all()
 
     def on_select(self, event: Event):
         """Callback for selected event"""
@@ -87,23 +82,30 @@ class QueueFrame(LabelFrame):
         elif column == 3:
             self.winfo_toplevel().event_generate("<<Queue-Artist>>", when="tail", y=event.y)
         elif column == 5:
-            self.songs.values.pop(index)
             self.tracks.pop(index)
 
-            if self.songs.selected == index:
-                self.songs.un_select()
+            selected = self.songs.selected
 
+            self.update_songs_list()
+
+            if selected == index:
                 if index >= len(self.songs):
                     index -= 1
 
                 if len(self.songs):
                     self.songs.select(index)
-                else:
                     self.winfo_toplevel().event_generate("<<Queue-Load>>", when="tail")
-            self.config(text=f"Queue({0 if self.songs.get_selected() is None else self.songs.get_selected() + 1}/{len(self.songs)})")
+                else:
+                    self.winfo_toplevel().event_generate("<<Queue-LoadNoPlay>>", when="tail")
+            elif selected is not None:
+                if selected > index:
+                    selected -= 1
+
+                self.songs.select(selected)
         else:
             self.select(index)
-            self.config(text=f"Queue({0 if self.songs.get_selected() is None else self.songs.get_selected() + 1}/{len(self.songs)})")
+
+        self.config(text=f"Queue({(self.songs.get_selected() + 1) if self.songs.get_selected() is not None and len(self.songs) else 0}/{len(self.songs)})")
 
         self.songs.update_all()
 
@@ -129,23 +131,16 @@ class QueueFrame(LabelFrame):
         self.songs.show(index)
         self.winfo_toplevel().event_generate("<<Queue-Load>>", when="tail")
 
-        self.config(text=f"Queue({0 if self.songs.get_selected() is None else self.songs.get_selected() + 1}/{len(self.songs)})")
+        self.config(text=f"Queue({(self.songs.get_selected() + 1) if self.songs.get_selected() is not None and len(self.songs) else 0}/{len(self.songs)})")
 
     def add_tracks(self, tracks: list[TrackData]):
         """Adds a list of tracks to the queue"""
 
-        self.songs.clear()
         self.tracks.extend(tracks)
 
-        for index, song in enumerate(self.tracks):
-            if song is None:
-                self.songs.add([GRIP, "ERROR", "ERROR", "ERROR", "--:--:--", CROSS, index])
-            else:
-                self.songs.add([GRIP, song.title, song.album, song.artist, song.get_len(), CROSS, index])
+        self.update_songs_list()
 
-        self.songs.update_all()
-
-        self.config(text=f"Queue({0 if self.songs.get_selected() is None else self.songs.get_selected() + 1}/{len(self.songs)})")
+        self.config(text=f"Queue({(self.songs.get_selected() + 1) if self.songs.get_selected() is not None and len(self.songs) else 0}/{len(self.songs)})")
 
     def move(self, delta: int = 1, play: bool = True):
         """
@@ -189,16 +184,16 @@ class QueueFrame(LabelFrame):
         else:
             self.winfo_toplevel().event_generate("<<Queue-LoadNoPlay>>", when="tail")
 
-        self.config(text=f"Queue({0 if self.songs.get_selected() is None else self.songs.get_selected() + 1}/{len(self.songs)})")
+        self.config(text=f"Queue({(self.songs.get_selected() + 1) if self.songs.get_selected() is not None and len(self.songs) else 0}/{len(self.songs)})")
 
-    def get_track(self) -> TrackData:
+    def get_track(self) -> TrackData | None:
         """Gets the currently selected song"""
 
         values = self.songs.get(self.songs.selected)
         if values is not None:
             return self.tracks[values[-1]]  # last element is track data index
 
-    def get_tracks(self):
+    def get_tracks(self) -> list[TrackData]:
         """Returns the current order of the list of tracks"""
 
         return [
@@ -208,6 +203,9 @@ class QueueFrame(LabelFrame):
 
     def shuffle(self, do_shuffle: bool):
         """Shuffles or un-shuffles the queue"""
+
+        if len(self.tracks) == 0:
+            return
 
         track = self.songs.selected
         tracks = range(0, len(self.tracks))
@@ -221,9 +219,22 @@ class QueueFrame(LabelFrame):
 
         for index in tracks:
             song = self.tracks[index]
-            self.songs.add([GRIP, song.title, song.album, song.artist, song.get_len(), CROSS, index])
+            self.songs.add([GRIP, song.title, song.album, song.artist, song.get_len(), CROSS, index], update=False)
+
+        self.songs.update_all()
 
         if track is not None:
             self.songs.select(tracks.index(track))
 
+    def update_songs_list(self):
+        scroll = self.songs.current_index
+        self.songs.clear()
+
+        for index, song in enumerate(self.tracks):
+            if song is None:
+                self.songs.add([GRIP, "ERROR", "ERROR", "ERROR", "--:--:--", CROSS, index], update=False)
+            else:
+                self.songs.add([GRIP, song.title, song.album, song.artist, song.get_len(), CROSS, index], update=False)
+
+        self.songs.current_index = scroll
         self.songs.update_all()

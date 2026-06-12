@@ -68,7 +68,7 @@ class AlbumsFrame(LabelFrame):
             self, columns=("#", "Title", "Album", "Artist", "Length"),
             auto_expand=(1, 2, 3),
             sashrelief="raised", sashwidth=5, title_relief="raised", title_padx=10, title_pady=5,
-            widths=[None, 150, 100, 100]
+            widths=[30, 150, 100, 100, 100]
         )
         self.songs_scroll_bar = ttk.Scrollbar(self, command=self.songs.yview)
         self.songs.yscrollcommand = self.songs_scroll_bar.set
@@ -163,12 +163,14 @@ class AlbumsFrame(LabelFrame):
         """Updates the song list by clearing then adding the albums"""
 
         search = self.albums_search.get().lower()
+        scroll_index = self.albums.current_row
 
         self.albums.clear()
 
         for button in (self.buttons if (search == "") else [b for b in self.buttons if search in b["text"].lower()]):
             self.albums.add(button)
 
+        self.albums.current_row = scroll_index
         self.albums.update_rows()
         self.config(text=f"Albums({len(self.albums)})")
 #
