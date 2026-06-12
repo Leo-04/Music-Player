@@ -52,7 +52,7 @@ class ToolTips(Label):
             self.after_cancel(self.after_id)
         self.after_id = self.after(self.delay, self.hovered)
 
-    def get_size(self, text: str, font: str | Font):
+    def get_size(self, text: str, font: str | Font) -> int:
         """Get the size of text for a given font"""
 
         font = Font(self.root, font)

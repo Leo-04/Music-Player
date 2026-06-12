@@ -137,7 +137,7 @@ class Indexer:
 
         Thread(target=self.update_index).start()
 
-    def update_index(self):
+    def update_index(self) -> int:
         """
         Updates the index
 

@@ -92,7 +92,7 @@ class ArtistsFrame(LabelFrame):
             self, columns=("#", "Title", "Album", "Artist", "Length"),
             auto_expand=(1, 2, 3),
             sashrelief="raised", sashwidth=5, title_relief="raised", title_padx=10, title_pady=5,
-            widths=[None, 150, 100, 100]
+            widths=[30, 150, 100, 100, 100]
         )
         self.songs_scroll_bar = ttk.Scrollbar(self, command=self.songs.yview)
         self.songs.yscrollcommand = self.songs_scroll_bar.set
@@ -102,7 +102,7 @@ class ArtistsFrame(LabelFrame):
         self.rowconfigure(1, weight=1)
 
         self.artists_search.bind("<KeyRelease>", lambda e: self.update_list())
-        self.albums_search.bind("<KeyRelease>", lambda e: self.update_album_list())
+        self.albums_search.bind("<KeyRelease>", lambda e: self.update_album_list(self.albums_search.get().lower()))
 
         self.songs.bind("<<Selected>>", lambda e: self.winfo_toplevel().event_generate("<<Artist-Selected>>", when="tail", x=e.x, y=e.y))
         self.songs.bind("<<Info>>", lambda e: self.winfo_toplevel().event_generate("<<Artist-Info>>", when="tail", x=e.x, y=e.y))
@@ -187,19 +187,7 @@ class ArtistsFrame(LabelFrame):
 
         self.albums_artist_name["text"] = artist
 
-        self.albums.clear()
-
-        albums = set()
-        for song in self.indexer.index:
-            if song.artist == artist:
-                albums.add(song.album)
-
-        for button in [b for b in self.buttons if b["text"] in albums]:
-            self.albums.add(button)
-
-        self.albums.sort(self.sort_key, reverse=True)
-        print([self.sort_key(value) for value in self.albums.values])
-        self.albums.update_rows()
+        self.update_album_list(None)
 
     def show_songs(self, album):
         """
@@ -268,11 +256,10 @@ class ArtistsFrame(LabelFrame):
 
         self.update_list()
 
-    def update_album_list(self):
+    def update_album_list(self, search: str | None):
         """Updates the album list by clearing then adding the albums from the selected artist"""
 
-        search = self.albums_search.get().lower()
-
+        scroll_index = self.albums.current_row
         self.albums.clear()
 
         albums = set()
@@ -280,9 +267,10 @@ class ArtistsFrame(LabelFrame):
             if song.artist == self.selected_artist:
                 albums.add(song.album)
 
-        for button in [b for b in self.buttons if b["text"] in albums and search in b["text"].lower()]:
+        for button in [b for b in self.buttons if b["text"] in albums and (search is None or search in b["text"].lower())]:
             self.albums.add(button)
 
+        self.albums.current_row = scroll_index
         self.albums.sort(self.sort_key, reverse=True)
         self.albums.update_rows()
 
@@ -290,12 +278,14 @@ class ArtistsFrame(LabelFrame):
         """Update the list of artists"""
 
         search = self.artists_search.get().lower()
+        scroll_index = self.artists.current_row
 
         self.artists.clear()
 
         for button in (self.artist_buttons if (search == "") else [b for b in self.artist_buttons if search in b["text"].lower()]):
             self.artists.add(button)
 
+        self.artists.current_row = scroll_index
         self.artists.update_rows()
         self.config(text=f"Artists({len(self.artists)})")
 #

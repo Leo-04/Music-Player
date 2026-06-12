@@ -42,12 +42,12 @@ class PlayListItem(TreeItem):
 
         Button.configure(self, text=self.text)
 
-    def is_folder(self):
+    def is_folder(self) -> bool:
         """Returns true if this item *CAN* be a folder"""
 
         return len(self.list) == 0
 
-    def is_playlist(self):
+    def is_playlist(self) -> bool:
         """Returns true if this item *CAN* be a playlist"""
 
         return len(self.list) or not len(self.items)
@@ -117,7 +117,7 @@ class PlaylistFrame(LabelFrame):
             self, columns=(" ", "Title", "Album", "Artist", "Length", " "),
             auto_expand=(1, 2, 3),
             sashrelief="raised", sashwidth=5, title_relief="raised", title_padx=10, title_pady=5,
-            widths=[None, 100, 50, 50],
+            widths=[25, 150, 100, 100, 100, 25],
             show_drag=[0]
         )
         self.songs_scroll_bar = ttk.Scrollbar(self, command=self.songs.yview)
@@ -367,7 +367,7 @@ class PlaylistFrame(LabelFrame):
 
             playlist.list.append(track)
 
-    def new_playlist(self, prompt="New playlist name:"):
+    def new_playlist(self, prompt="New playlist name:") -> None | PlayListItem:
         """Create a new playlist with a prompt"""
 
         name = askstring("Create New playlist", prompt)

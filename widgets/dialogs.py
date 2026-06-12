@@ -218,47 +218,47 @@ class InputDialog(DialogWindow):
         return DialogWindow.get(self, force_focus, no_move)
 
 
-def dialog(dialog_window):
+def dialog(dialog_window) -> any:
     result = dialog_window.get()
     dialog_window.destroy()
 
     return result
 
 
-def showinfo(title: str = "", message: str = "", **options):
+def showinfo(title: str = "", message: str = "", **options) -> any:
     """Shows information to the user"""
 
     return dialog(OptionDialog(title, message, OptionDialog.ok, **options))
 
 
-def askokcancel(title: str = "", message: str = "", **options):
+def askokcancel(title: str = "", message: str = "", **options) -> any:
     """Shows asks the user to pick ok or cancel"""
 
     return dialog(OptionDialog(title, message, OptionDialog.ok_cancel, **options))
 
 
-def askyesno(title: str = "", message: str = "", **options):
+def askyesno(title: str = "", message: str = "", **options) -> any:
     """Shows asks the user to pick yes or no"""
 
     return dialog(OptionDialog(title, message, OptionDialog.yes_no, **options))
 
 
-def askstring(title: str = "", message: str = "", **options):
+def askstring(title: str = "", message: str = "", **options) -> str | None:
     """Asks the user for a string"""
 
     return dialog(InputDialog(title, message, **options))
 
 
-def askint(title: str = "", message: str = "", **options):
+def askint(title: str = "", message: str = "", **options) -> int | None:
     """Asks the user for an integer"""
 
     return dialog(InputDialog(title, message, validate=lambda s: s.isdigit(), **options))
 
 
-def askfloat(title: str = "", message: str = "", **options):
+def askfloat(title: str = "", message: str = "", **options) -> float | None:
     """Asks the user for a float"""
 
-    def is_float(element):
+    def is_float(element) -> bool:
         try:
             float(element)
             return True

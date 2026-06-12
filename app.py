@@ -35,11 +35,12 @@ from music.player import Player as Player
 from music.track import get_track_data_from_filename, TrackData
 
 from modules import mediakeys
+from modules.dnd import dnd
 
 from resources import *
 
 
-def dir_path(local_path: str):
+def dir_path(local_path: str) -> str:
     """
     Finds the path of the current executable file or script
 
@@ -208,7 +209,7 @@ class App(Tk):
         # was a bit long... so moved to its own function
         self.bind_all_events()
 
-        # Need to call these after we setup the bindings as they call events
+        # Need to call these after we set up the bindings as they call events
         self.eq_window.set_sliders(settings["eq_values"])
         self.player.set_eq(*settings["eq_values"])
         self.player_frame.side.volume.set(settings["volume"])
@@ -216,17 +217,24 @@ class App(Tk):
         self.indexer.update_index_thread()
 
         # Parse command line arguments
+        self.play_tracks_from_argv(argv, 0)
+
+        dnd(self, self.play_tracks_from_argv)
+
+    def play_tracks_from_argv(self, argv: list[str], index: int | None = None):
+        """Play tracks from the command line"""
+
         argv_files = self.load_tracks_from_list(argv)
         for track in argv_files:
             self.played.add(str(track.filename), "File")
 
-        self.play_tracks(0, argv_files)
+        self.play_tracks(index, argv_files)
 
-        # Show the window
-        self.deiconify()
-        self.update()
+        self.show()
+        self.focus_set()
+        self.focus_force()
 
-    def load_tracks_from_list(self, files: list[str]):
+    def load_tracks_from_list(self, files: list[str]) -> list[TrackData]:
         """
         Load a set of tracks from a list of files
         If a file cannot be loaded, a error message is shown
@@ -304,14 +312,14 @@ class App(Tk):
 
         self.played.add(album, "Album")
 
-        return self.play_tracks(start_index, self.get_tracks_in_album(album))
+        self.play_tracks(start_index, self.get_tracks_in_album(album))
 
     def play_artist(self, start_index: None | int, artist: str):
         """Plays all songs by an artist"""
 
         self.played.add(artist, "Artist")
 
-        return self.play_tracks(start_index, [
+        self.play_tracks(start_index, [
             track
             for track in self.indexer.index
             if track.artist == artist
@@ -322,7 +330,7 @@ class App(Tk):
 
         self.played.add((track.title, track.album, track.artist, str(track.filename)), "Song")
 
-        return self.play_tracks(0 if play else None, [track])
+        self.play_tracks(0 if play else None, [track])
 
     def get_playlist_tracks(self, start_index: None | int, playlist_path: list[int]) -> tuple[int | None, list[TrackData] | None]:
         """
@@ -405,7 +413,7 @@ class App(Tk):
         else:
             self.played.add(playlist, "Playlist")
 
-        return self.play_tracks(start_index, tracks)
+        self.play_tracks(start_index, tracks)
 
     def on_time_update(self):
         """
@@ -414,10 +422,10 @@ class App(Tk):
         """
 
         track = self.queue.get_track()
-        self.player_frame.preview.set_album("Albums" if track is None else track.album)
-        self.player_frame.preview.set_artist("Artists" if track is None else track.artist)
-        self.player_frame.preview.set_track_name("" if track is None else track.title)
-        self.player_frame.preview.set_image("" if track is None else track.filename)
+        self.player_frame.preview.set_album("ALBUM" if track is None else track.album)
+        self.player_frame.preview.set_artist("ARTIST" if track is None else track.artist)
+        self.player_frame.preview.set_track_name("TRACK NAME" if track is None else track.title)
+        self.player_frame.preview.set_image(None if track is None else track.filename)
         self.player_frame.seeker.update_text()
         self.popout.update_info()
 
@@ -604,10 +612,10 @@ class App(Tk):
             if (
                     not isinstance(playlists, list)
                     and any([
-                        not isinstance(key, str)
-                        and not isinstance(stuff, list)
-                        for key, stuff in playlists
-                    ])
+                not isinstance(key, str)
+                and not isinstance(stuff, list)
+                for key, stuff in playlists
+            ])
             ):
                 raise TypeError()
         except Exception as err:
@@ -675,7 +683,7 @@ class App(Tk):
         def decrease_volume():
             self.player_frame.side.volume.set(self.player_frame.side.volume.get() - 1)
 
-        def if_text_widget_is_not_focused(callback, *args, **kwargs):
+        def if_text_widget_is_not_focused(callback, *args, **kwargs) -> callable:
             """Returns an event function that will on call `callback` if a text like widget is not focused"""
 
             def func(_):
@@ -713,6 +721,9 @@ class App(Tk):
         # ====================== Actions ======================
 
         def previous_song(_: Event):
+            if self.queue.get_track() is None:
+                return
+
             if (
                     self.queue.get_track().length * self.player.get_pos() <= 5
                     and self.queue.get_track()
@@ -722,15 +733,30 @@ class App(Tk):
                 self.player.set_pos(0)
 
         def next_song(_: Event):
+            if self.queue.get_track() is None:
+                return
+
             self.queue.move(1, not self.player.is_paused())
 
         def pause(_: Event):
+            if self.queue.get_track() is None:
+                return
+
             self.player.pause()
             self.player_frame.actions.set_play(False)
 
         def play(_: Event):
+            if self.queue.get_track() is None:
+                return
+
             self.player.play()
             self.player_frame.actions.set_play(True)
+
+        def show_info():
+            if self.queue.get_track() is not None:
+                self.info_window.set_track(self.queue.get_track())
+            else:
+                self.tabs.select(2)
 
         def show_album(_: Event):
             if self.queue.get_track() is not None:
@@ -754,7 +780,7 @@ class App(Tk):
         self.bind("<<Action-Repeat1>>", lambda e: (self.queue.loop(QueueFrame.LoopType.LOOP_1_SONG)))
         self.bind("<<Action-NoRepeat>>", lambda e: (self.queue.loop(QueueFrame.LoopType.STOP_AT_END)))
         self.bind("<<Action-AddCurrentSongToPlaylist>>", lambda e: (self.add_window.set_tracks([self.queue.get_track()])))
-        self.bind("<<Action-Info>>", lambda e: (self.info_window.set_track(self.queue.get_track())))
+        self.bind("<<Action-Info>>", lambda e: show_info())
         self.bind("<<Action-Album>>", show_album)
         self.bind("<<Action-Artist>>", show_artist)
         self.bind("<<Action-Mute>>", lambda e: (self.player.set_volume(0)))
@@ -841,7 +867,7 @@ class App(Tk):
         self.bind("<<Playlist-PlayAll>>", lambda e: (self.play_playlist(0, self.playlists.selected_playlist.path())))
         self.bind("<<Playlist-AddAll>>", lambda e: (self.play_playlist(None, self.playlists.selected_playlist.path())))
 
-        def get_playlist_track(index):
+        def get_playlist_track(index: None | int) -> None | TrackData:
             index, tracks = self.get_playlist_tracks(index, self.playlists.selected_playlist.path())
             if tracks is None or index is None:
                 return None
@@ -878,6 +904,7 @@ class App(Tk):
             self.player.set_pos(0)
             self.player.pause()
             self.player_frame.actions.set_play(False)
+            self.on_time_update()
 
         def queue_album_selected(event: Event):
             self.albums.show_songs(self.queue.get_tracks()[event.y].album)
@@ -933,11 +960,10 @@ class App(Tk):
 
             elif type_ == "File":
                 self.play_tracks(0, self.load_tracks_from_list([data]))
+                self.played.add(data, type_)
 
             else:
                 print("Invalid type:", type_)
-
-            self.played.add(data, type_)
 
         def played_info(event: Event):
             data, type_ = self.played.get_last_played()[event.y]

@@ -176,12 +176,12 @@ class TreeItem(Button):
         self.update_text()
         self.master.update_items()
 
-    def get_height(self):
+    def get_height(self) -> int:
         """Gets the wanted height for this item"""
 
         return self.cget("bd")*2 + self.cget("pady")*2 + Font(font=self.cget("font")).metrics("linespace")
 
-    def get_items(self):
+    def get_items(self) -> list["TreeItem"]:
         """Returns all shown items"""
 
         return [
@@ -442,7 +442,7 @@ class TreeList(Frame):
         self.items.remove(item)
         self.update_items()
 
-    def pop(self, index: int):
+    def pop(self, index: int) -> TreeItem:
         """Removes an item from the TreeList by index"""
 
         item = self.items.pop(index)
@@ -460,7 +460,7 @@ class TreeList(Frame):
         self.items.clear()
         self.update_items()
 
-    def get_items(self):
+    def get_items(self) -> list[TreeItem]:
         """Returns all items"""
 
         return self.items

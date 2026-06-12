@@ -53,7 +53,7 @@ class SettingsFrame(LabelFrame):
             auto_expand=(0,),
             sashwidth=0,
             sashrelief="raised", title_relief="raised", title_padx=10, title_pady=5,
-            widths=[100], height=150, bd=2, relief="ridge"
+            widths=[100, 25], height=150, bd=2, relief="ridge"
         )
         indexer_paths_scroll_bar = ttk.Scrollbar(self, command=self.indexer_paths.yview)
         self.indexer_paths.yscrollcommand = indexer_paths_scroll_bar.set
