@@ -33,7 +33,8 @@ class SettingsFrame(LabelFrame):
             self, columns=("Theme",),
             auto_expand=(0,),
             sashrelief="raised", sashwidth=5, title_relief="raised", title_padx=10, title_pady=5,
-            widths=[100], height=150, bd=2, relief="ridge"
+            widths=[100], height=150, bd=2, relief="ridge",
+            highlight_items=[0], highlight_color={0: None}
         )
         theme_scroll_bar = ttk.Scrollbar(self, command=self.themes.yview)
         self.themes.yscrollcommand = theme_scroll_bar.set
@@ -43,7 +44,8 @@ class SettingsFrame(LabelFrame):
             self, columns=("Output Device",),
             auto_expand=(0,),
             sashrelief="raised", sashwidth=5, title_relief="raised", title_padx=10, title_pady=5,
-            widths=[100], height=150, bd=2, relief="ridge"
+            widths=[100], height=150, bd=2, relief="ridge",
+            highlight_color={0: None}
         )
         outputs_scroll_bar = ttk.Scrollbar(self, command=self.outputs.yview)
         self.outputs.yscrollcommand = outputs_scroll_bar.set
@@ -53,13 +55,12 @@ class SettingsFrame(LabelFrame):
             auto_expand=(0,),
             sashwidth=0,
             sashrelief="raised", title_relief="raised", title_padx=10, title_pady=5,
-            widths=[100, 25], height=150, bd=2, relief="ridge"
+            widths=[100, 25], height=150, bd=2, relief="ridge",
+            highlight_items=[0], highlight_color={0: None, 1: "red"}
         )
         indexer_paths_scroll_bar = ttk.Scrollbar(self, command=self.indexer_paths.yview)
         self.indexer_paths.yscrollcommand = indexer_paths_scroll_bar.set
 
-        # eq_button = Button(self, text="EQ\nPreset", command=lambda: self.winfo_toplevel().event_generate("<<Settings-ShowEq>>", when="tail"))
-        # indexer_button = Button(self, text="Restart\nIndexer", command=lambda: self.indexer.update_index_thread())
         self.ffplay_button = Button(self, text="FFPlay: " + str(Player.ffplay), command=self.choose_ffplay)
 
         self.themes.grid(row=0, column=0, sticky=NSEW)
@@ -69,9 +70,6 @@ class SettingsFrame(LabelFrame):
         self.indexer_paths.grid(row=2, column=0, sticky=NSEW)
         indexer_paths_scroll_bar.grid(row=2, column=1, sticky=NS)
         self.ffplay_button.grid(row=3, column=0, columnspan=3, sticky=NSEW)
-
-        # indexer_button.grid(row=0, column=2, sticky=NSEW)
-        # eq_button.grid(row=2, column=2, sticky=NSEW)
 
         self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
@@ -119,7 +117,7 @@ class SettingsFrame(LabelFrame):
     def indexer_selected(self, event: Event):
         """Callback for selecting an index path"""
 
-        if event.x == 1:
+        if event.x == 1 and event.y < len(self.indexer.paths):
             self.indexer.paths.pop(event.y)
             self.indexer.update_index_thread()
             self.on_show()

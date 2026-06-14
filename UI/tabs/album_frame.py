@@ -68,7 +68,8 @@ class AlbumsFrame(LabelFrame):
             self, columns=("#", "Title", "Album", "Artist", "Length"),
             auto_expand=(1, 2, 3),
             sashrelief="raised", sashwidth=5, title_relief="raised", title_padx=10, title_pady=5,
-            widths=[30, 150, 100, 100, 100]
+            widths=[30, 150, 100, 100, 100],
+            highlight_items=[2, 3], highlight_color={2: None, 3: None}
         )
         self.songs_scroll_bar = ttk.Scrollbar(self, command=self.songs.yview)
         self.songs.yscrollcommand = self.songs_scroll_bar.set

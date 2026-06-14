@@ -20,12 +20,15 @@ class ListView(Frame):
     title_border: int = 2
     title_padx: int = 0
     title_pady: int = 0
-    title_relief: ["raised", "sunken", "flat", "ridge", "solid", "groove"] = "raised"
+    title_relief: RAISED or SUNKEN or FLAT or RIDGE or SOLID or GROOVE = "raised"
     item_height: None | int = None
     item_border: int = 0
     item_padx: int = 0
     item_pady: int = 3
-    item_relief: ["raised", "sunken", "flat", "ridge", "solid", "groove"] = "flat"
+    item_relief: RAISED or SUNKEN or FLAT or RIDGE or SOLID or GROOVE = "flat"
+    item_highlightthickness: int = 2
+    highlight_items: list[int] = None
+    highlight_color: dict[int, str | None] = None
     show_drag: list[int] = None
     show_drag_item: list[int] = None
 
@@ -52,6 +55,8 @@ class ListView(Frame):
         if columns is None:
             columns = ("",)
 
+        self.highlight_items = self.highlight_items or []
+        self.highlight_color = self.highlight_color or {}
         self.auto_expand = self.auto_expand or (0,)
         self.fixed_columns = self.fixed_columns or ()
         self.min_widths = self.min_widths or ()
@@ -200,7 +205,7 @@ class ListView(Frame):
             self.select_foreground = cnf.pop("select_foreground")
 
         if "foreground" in cnf:
-            self.select_foreground = cnf.pop("foreground")
+            self.foreground = cnf.pop("foreground")
 
         if "font" in cnf:
             self.font = cnf.pop("font")
@@ -234,6 +239,15 @@ class ListView(Frame):
 
         if "item_border" in cnf:
             self.item_border = cnf.pop("item_border")
+
+        if "item_highlightthickness" in cnf:
+            self.item_highlightthickness = cnf.pop("item_highlightthickness")
+
+        if "highlight_items" in cnf:
+            self.highlight_items = cnf.pop("highlight_items")
+
+        if "highlight_color" in cnf:
+            self.highlight_color = cnf.pop("highlight_color")
 
         if "show_drag" in cnf:
             self.show_drag = cnf.pop("show_drag")
@@ -331,6 +345,15 @@ class ListView(Frame):
         elif "item_border" == key:
             return self.item_border
 
+        elif "item_highlightthickness" == key:
+            return self.item_highlightthickness
+
+        elif "highlight_items" == key:
+            return self.highlight_items
+
+        elif "highlight_color" == key:
+            return self.highlight_color
+
         elif "title_padx" == key:
             return self.title_padx
 
@@ -365,7 +388,8 @@ class ListView(Frame):
             "select_bg", "select_background",
             "select_fg", "select_foreground", "foreground",
             "font",
-            "item_padx", "item_pady", "item_height", "item_relief", "item_border",
+            "highlight_items", "highlight_colors",
+            "item_padx", "item_pady", "item_height", "item_relief", "item_border", "item_highlightthickness",
             "title_padx", "title_pady", "title_height", "title_relief", "title_border",
         ]
 
@@ -524,17 +548,27 @@ class ListView(Frame):
                 if row >= len(labels):
                     label = Label(
                         frame,
+                        name="label-" + str(row),
+
                         font=font,
+
                         foreground=self.foreground,
                         bg=self["bg"],
-                        name="label-" + str(row),
+                        activeforeground=self.select_foreground,
+                        activebackground=self.select_background,
+
                         pady=self.item_pady,
                         padx=self.item_padx,
+
                         border=self.item_border,
                         relief=self.item_relief,
+
                         compound=CENTER,
                         image=self.img_1x1,
-                        height=item_height
+
+                        height=item_height,
+
+                        takefocus=False,
                     )
                     label.place(x=0, y=row * label_height + self.title_height, relwidth=1, height=label_height)
                     label.bind("<ButtonRelease-1>", lambda e, r=row, c=column: self.on_release(e, r, c))
@@ -549,20 +583,56 @@ class ListView(Frame):
                     ))
                     label.bind("<Button-4>", lambda e, c=column, r=row: self.event_generate("<<Back>>", x=c, y=r))
                     label.bind("<Button-5>", lambda e, c=column, r=row: self.event_generate("<<Forwards>>", x=c, y=r))
+                    label.bind("<Enter>", lambda e, r=row, c=column: self.on_enter(e, r, c))
+                    label.bind("<Leave>", lambda e, r=row, c=column: self.on_leave(e, r, c))
 
                     labels.append(label)
                 else:
+                    labels[row].config(height=item_height)
                     labels[row].place(x=0, y=row * label_height + self.title_height, relwidth=1, height=label_height)
 
             height += label_height
             self.rows += 1
 
         for frame, labels in self.columns:
-            for label in labels[self.rows:]:
-                label.place_forget()
+            for i in range(len(labels) - self.rows):
+                labels.pop(-1).destroy()
+
 
         self.update_labels_text()
         self.update_scrollbar()
+
+    def on_enter(self, _: Event, row: int, column: int):
+        """Event callback for hovering over widget"""
+
+        if row < len(self):
+            for col, (frame, labels) in enumerate(self.columns):
+                if column in self.highlight_items and col != column:
+                    continue
+
+                color = None
+                if column in self.highlight_color:
+                    color = self.highlight_color[column]
+                if color is None:
+                    if column not in self.highlight_items:
+                        continue
+
+                    color = self.cget("highlightbackground")
+
+                labels[row].configure(highlightthickness=self.item_highlightthickness, highlightbackground=color)
+
+    def on_leave(self, _: Event, row: int, column: int):
+        """Event callback for stop hovering over widget"""
+
+        if row < len(self):
+            for frame, labels in self.columns:
+                labels[row].configure(
+                    fg=self.foreground,
+                    bg=self.cget("background"),
+                    activeforeground=self.select_foreground,
+                    activebackground=self.select_background,
+                    highlightthickness=0
+                )
 
     def on_drag(self, event: Event, row: int, column: int):
         """Event callback for button 1 mouse motion"""
@@ -603,7 +673,8 @@ class ListView(Frame):
             for key in event.widget.configure():
                 try:
                     self.drag_frame_labels[i].configure({key: event.widget.cget(key)})
-                except TclError as err: print(err)
+                except TclError as err:
+                    print(err)
 
             self.drag_frame_labels[i].configure(
                 text=label["text"],
@@ -704,19 +775,41 @@ class ListView(Frame):
                     if row < len(labels):
                         label = labels[row]
 
+                        label.config(
+                            foreground=self.foreground,
+                            background=self.cget("background"),
+
+                            activeforeground=self.select_foreground,
+                            activebackground=self.select_background,
+
+                            font=self.font,
+
+                            pady=self.item_pady,
+                            padx=self.item_padx,
+
+                            border=self.item_border,
+                            relief=self.item_relief,
+
+                            takefocus=False,
+                        )
                         if isinstance(values[column], dict):
                             label.configure(values[column])
                         else:
-                            label["image"] = self.img_1x1
-                            label["text"] = str(values[column])
+                            label.config(
+                                image=self.img_1x1,
+                                text=str(values[column]),
+                            )
 
                 row += 1
             index += 1
 
         for column, (frame, labels) in enumerate(self.columns):
             for label in labels[row:]:
-                label["image"] = self.img_1x1
-                label["text"] = ""
+                label.config(
+                    image=self.img_1x1,
+                    text="",
+                    highlightthickness=0,
+                )
 
     def update_scrollbar(self):
         """Update the scrollbar"""
@@ -738,15 +831,13 @@ class ListView(Frame):
     def un_select(self):
         """Unselect the selected row"""
 
-        if self.selected is None or self.select_background is None:
+        if self.selected is None:
             return
 
+        row = self.selected - self.current_index
         for (column, labels) in self.columns:
-            row = self.selected - self.current_index
-            if 0 <= row:
-                for label in labels:
-                    label["bg"] = self["bg"]
-                    label["fg"] = self.foreground
+            if row < len(labels):
+                labels[row].config(state="normal")
 
     def show(self, index: int):
         """Scroll down to show the given index"""
@@ -772,6 +863,4 @@ class ListView(Frame):
         if 0 <= row <= self.rows:
             for (column, labels) in self.columns:
                 if row < len(labels):
-                    label = labels[row]
-                    label["bg"] = self.select_background
-                    label["fg"] = self.select_foreground
+                    labels[row].config(state="active")

@@ -54,7 +54,11 @@ class Single:
         """Run the socket server for the main instance"""
 
         while self.can_bind:
-            connection, address = self.socket.accept()
+            try:
+                connection, address = self.socket.accept()
+            except OSError:
+                break  # socket was destroyed
+
             length = int.from_bytes(connection.recv(4), "big", signed=False)
             argv = []
             for i in range(length):

@@ -688,12 +688,13 @@ class App(Tk):
 
             def func(_):
                 if (
-                        not (issubclass(type(self.focus_get()), (Text, Entry, Scale)))
-                        and (type(self.focus_get()) not in (Text, Entry, Scale))
+                    not (issubclass(type(self.focus_get()), (Text, Entry, Scale)))
+                    and (type(self.focus_get()) not in (Text, Entry, Scale))
                 ):
                     callback(*args, **kwargs)
 
             return func
+
 
         self.bind("<Key-space>", if_text_widget_is_not_focused(play_pause))
         self.bind("<Key-Left>", if_text_widget_is_not_focused(scrub_left))
@@ -717,6 +718,7 @@ class App(Tk):
         self.bind("<Key-p>", if_text_widget_is_not_focused(self.tabs.select, 5))
         self.bind("<Key-i>", if_text_widget_is_not_focused(self.tabs.select, 6))
         self.bind("<Key-t>", if_text_widget_is_not_focused(self.event_generate, "<<Action-Info>>", when="tail"))
+
 
         # ====================== Actions ======================
 

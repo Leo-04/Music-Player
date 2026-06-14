@@ -90,7 +90,7 @@ LIGHT_THEME = LIGHT + APP_THEME
 DARK_THEME = DARK + APP_THEME
 
 ABOUT = """\
-Version 5.0
+Version 5.1
 
 An Open-Source music player written in Python using the command-line ffplay
 

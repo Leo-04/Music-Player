@@ -33,7 +33,8 @@ class QueueFrame(LabelFrame):
             self, columns=(" ", "Title", "Album", "Artist", "Length", " "),
             auto_expand=(1, 2, 3),
             sashrelief="raised", sashwidth=5, title_relief="raised", title_padx=10, title_pady=5,
-            widths=[25, 150, 100, 100, 100, 25], show_drag=[0]
+            widths=[25, 150, 100, 100, 100, 25], show_drag=[0],
+            highlight_items=[2, 3], highlight_color={2: None, 3: None, 5: "red"}
         )
         scroll_bar = ttk.Scrollbar(self, command=self.songs.yview)
         self.songs.yscrollcommand = scroll_bar.set

@@ -25,7 +25,8 @@ class PlayedFrame(LabelFrame):
             self, columns=("#", "Name", "Type", " "),
             auto_expand=(1,),
             sashrelief="raised", sashwidth=5, title_relief="raised", title_padx=10, title_pady=5,
-            widths=[30, 150, 100, 25]
+            widths=[30, 150, 100, 25],
+            highlight_color={3: "red"}
         )
         songs_scroll_bar = ttk.Scrollbar(self, command=self.songs.yview)
         self.songs.yscrollcommand = songs_scroll_bar.set
