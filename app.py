@@ -150,7 +150,7 @@ class App(Tk):
         self.indexer = MusicIndexer(
             settings["index_paths"],
             on_done=lambda: self.event_generate("<<Indexer-Done>>", when="tail"),
-            on_error=lambda err: showinfo("Error", "Indexer error: " + str(err)),
+            on_error=lambda err: print("Indexer error: " + str(err)),
             on_start=lambda: self.event_generate("<<Indexer-Start>>", when="tail")
         )
         self.player = Player(
@@ -164,8 +164,9 @@ class App(Tk):
             self,
             dict(text="Add Files To Queue", hotkey="<Control-Key-o>", command=self.add_files),
             dict(text="EQ Presets", hotkey="<Control-e>", command=lambda: self.player.set_eq(*self.eq_window.get())),
+            dict(text="Quit", hotkey="<Control-q>", command=self.close, side=RIGHT),
             dict(text="Restart Indexer", hotkey="<Control-i>", command=self.indexer.update_index_thread, side=RIGHT, name="indexer_button"),
-            dict(text="About", hotkey="<Control-h>", command=lambda: showinfo("About", ABOUT, height=420, width=400), side=RIGHT),
+            dict(text="About", hotkey="<Control-h>", command=lambda: showinfo("About", ABOUT, height=500, width=400), side=RIGHT),
         )
         self.indexer_button = menu.nametowidget("indexer_button")
 
@@ -588,9 +589,10 @@ class App(Tk):
             ):
                 raise TypeError()
         except Exception as err:
+            user =  os.getlogin() 
             settings = {
                 "theme": "dark",
-                "index_paths": ["C:\\users\\" + os.getlogin() + "\\music" if os.name == "nt" else "~/music"],
+                "index_paths": [f"C:\\users\\{user}\\music" if os.name == "nt" else f"/home/{user}/Music"],
                 "output_device": "",
                 "volume": 100,
                 "eq_values": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],

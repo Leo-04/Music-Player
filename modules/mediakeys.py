@@ -12,12 +12,12 @@ WM_HOTKEY = 0x0312
 PM_REMOVE = 0x0001
 
 # Linux constants
-KEY_PLAY = 172
-KEY_PAUSE = 173
-KEY_NEXT = 171
-KEY_PREVIOUS = 170
-KEY_STOP = 174
-AnyModifier = 0
+KEY_PLAY = 0x1008FF14
+KEY_PAUSE = 0x1008FF13
+KEY_NEXT = 0x1008FF17
+KEY_PREVIOUS = 0x1008FF16
+KEY_STOP = 0x1008FF15
+AnyModifier = 0x80000000
 GrabModeAsync = 1
 KeyPress = 2
 
@@ -77,44 +77,78 @@ def media_keys_thread_linux(root: Tk, is_alive: callable):
     """
     A thread to handle linux media hotkeys
 
+
     Parameters:
         root: Tk
             The root window to send events too
+
 
         is_alive: callable
             A function, while it returns true, the thread shall exist
     """
 
     x11 = ctypes.cdll.LoadLibrary('libX11.so.6')
-    display = x11.XOpenDisplay(None)
+    
+    x11.XOpenDisplay.argtypes = [ctypes.c_char_p]
+    x11.XOpenDisplay.restype = ctypes.c_void_p
 
+    x11.XDefaultRootWindow.argtypes = [ctypes.c_void_p]
+    x11.XDefaultRootWindow.restype = ctypes.c_ulong
+
+    x11.XCloseDisplay.argtypes = [ctypes.c_void_p]
+    x11.XCloseDisplay.restype = ctypes.c_int
+
+    x11.XPending.argtypes = [ctypes.c_void_p]
+    x11.XPending.restype = ctypes.c_int
+
+    x11.XGrabKey.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_uint, ctypes.c_ulong,
+                             ctypes.c_int, ctypes.c_int, ctypes.c_int]
+    x11.XGrabKey.restype = ctypes.c_int
+
+    x11.XUngrabKey.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_uint, ctypes.c_ulong]
+    x11.XUngrabKey.restype = ctypes.c_int
+
+    x11.XSync.argtypes = [ctypes.c_void_p, ctypes.c_int]
+    x11.XSync.restype = ctypes.c_int
+
+    x11.XKeysymToKeycode.argtypes = [ctypes.c_void_p, ctypes.c_ulong]
+    x11.XKeysymToKeycode.restype = ctypes.c_ubyte
+
+
+    display = x11.XOpenDisplay(None)
+    
     if not display:
         raise Exception("Could not open X11 display")
 
     root = x11.XDefaultRootWindow(display)
 
-    if x11.XGrabKey(display, KEY_PLAY, AnyModifier, root, True, GrabModeAsync, GrabModeAsync):
+    play_code = x11.XKeysymToKeycode(display, KEY_PLAY)
+    if x11.XGrabKey(display, play_code, AnyModifier, root, True, GrabModeAsync, GrabModeAsync):
         x11.XCloseDisplay(display)
         raise Exception("Failed to register PLAY")
 
-    if x11.XGrabKey(display, KEY_PAUSE, AnyModifier, root, True, GrabModeAsync, GrabModeAsync):
+    pause_code = x11.XKeysymToKeycode(display, KEY_PAUSE)
+    if x11.XGrabKey(display, pause_code, AnyModifier, root, True, GrabModeAsync, GrabModeAsync):
         x11.XCloseDisplay(display)
         raise Exception("Failed to register PAUSE")
 
-    if x11.XGrabKey(display, KEY_NEXT, AnyModifier, root, True, GrabModeAsync, GrabModeAsync):
+    next_code = x11.XKeysymToKeycode(display, KEY_NEXT)
+    if x11.XGrabKey(display, next_code, AnyModifier, root, True, GrabModeAsync, GrabModeAsync):
         x11.XCloseDisplay(display)
         raise Exception("Failed to register NEXT")
 
-    if x11.XGrabKey(display, KEY_PREVIOUS, AnyModifier, root, True, GrabModeAsync, GrabModeAsync):
+    prev_code = x11.XKeysymToKeycode(display, KEY_PREVIOUS)
+    if x11.XGrabKey(display, prev_code, AnyModifier, root, True, GrabModeAsync, GrabModeAsync):
         x11.XCloseDisplay(display)
         raise Exception("Failed to register PREVIOUS")
 
-    if x11.XGrabKey(display, KEY_STOP, AnyModifier, root, True, GrabModeAsync, GrabModeAsync):
+    stop_code = x11.XKeysymToKeycode(display, KEY_STOP)
+    if x11.XGrabKey(display, stop_code, AnyModifier, root, True, GrabModeAsync, GrabModeAsync):
         x11.XCloseDisplay(display)
         raise Exception("Failed to register STOP")
 
     x11.XSync(display, False)
-
+    
     # Funny hack
     XEvent = ctypes.c_char * 256
     event = XEvent()
@@ -127,22 +161,22 @@ def media_keys_thread_linux(root: Tk, is_alive: callable):
 
             if event_type == KeyPress:
                 keycode = ord(event[1])
-                if keycode == KEY_PLAY or keycode == KEY_PAUSE:
+                if keycode == play_code or keycode == pause_code:
                     root.after(0, lambda: root.event_generate("<<MediaKey-PlayPause>>"))
-                elif keycode == KEY_STOP:
+                elif keycode == stop_code:
                     root.after(0, lambda: root.event_generate("<<MediaKey-Stop>>"))
-                elif keycode == KEY_PREVIOUS:
+                elif keycode == prev_code:
                     root.after(0, lambda: root.event_generate("<<MediaKey-Previous>>"))
-                elif keycode == KEY_NEXT:
+                elif keycode == next_code:
                     root.after(0, lambda: root.event_generate("<<MediaKey-Next>>"))
 
         time.sleep(0.01)
 
-    x11.XUngrabKey(display, KEY_PLAY, AnyModifier, root)
-    x11.XUngrabKey(display, KEY_PAUSE, AnyModifier, root)
-    x11.XUngrabKey(display, KEY_NEXT, AnyModifier, root)
-    x11.XUngrabKey(display, KEY_PREVIOUS, AnyModifier, root)
-    x11.XUngrabKey(display, KEY_STOP, AnyModifier, root)
+    x11.XUngrabKey(display, play_code, AnyModifier, root)
+    x11.XUngrabKey(display, pause_code, AnyModifier, root)
+    x11.XUngrabKey(display, next_code, AnyModifier, root)
+    x11.XUngrabKey(display, prev_code, AnyModifier, root)
+    x11.XUngrabKey(display, stop_code, AnyModifier, root)
     x11.XCloseDisplay(display)
 
 

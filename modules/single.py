@@ -29,7 +29,7 @@ class Single:
             self.socket.listen(1)
             self.can_bind = True
             print("Listen on port:", port)
-        except OSError as err:
+        except Exception as err:
             self.socket.connect(('127.0.0.1', port))
             self.can_bind = False
             print("Sending on port:", port, "\nError:", err)
@@ -56,7 +56,7 @@ class Single:
         while self.can_bind:
             try:
                 connection, address = self.socket.accept()
-            except OSError:
+            except Exception:
                 break  # socket was destroyed
 
             length = int.from_bytes(connection.recv(4), "big", signed=False)
@@ -75,11 +75,14 @@ class Single:
         return not self.can_bind
 
     def close(self):
-        """Closes the socket, if the loop is threaded, stop that and join it"""
+        """Closes the socket"""
 
         self.can_bind = False
         self.socket.close()
-
+    
+    def join():
+        """if the loop is threaded, join it"""
+    
         if self.thread is not None:
             self.thread.join()
             self.thread = None
