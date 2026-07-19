@@ -90,7 +90,7 @@ LIGHT_THEME = LIGHT + APP_THEME
 DARK_THEME = DARK + APP_THEME
 
 ABOUT = """\
-Version 5.1
+Version 5.2
 
 An Open-Source music player written in Python using the command-line ffplay
 
@@ -99,7 +99,6 @@ Repo: https://github.com/Leo-04/Music-Player
 Made because windows' new media play sucks
 Should be cross-platform, 
 Media controls are not globally hooked on Mac
-Linux code was not fully tested, as have not got a spare linux laptop laying around to test it on
 
 ffplay must be installed separately if not packaged with the music player (at directory `ffmpeg/bin/`)
 
