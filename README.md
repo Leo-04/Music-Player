@@ -3,10 +3,8 @@
 An Open-Source music player written in Python using the command-line ffplay
 
 ## Platforms
-Should be cross-platform, 
+Should be cross-platform, Windows fully tested, Linux partial tested (should be function on both)
 Media controls are not globally hooked on Mac
-
-Linux code was not fully tested, as have not got a spare linux laptop laying around to test it on
 
 ## Dependencies
 
